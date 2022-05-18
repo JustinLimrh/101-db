@@ -17,3 +17,22 @@ library(glue)
 library(DT)
 ```
 
+```{r}
+run_app = function(){
+  con <- dbConnect(RSQLite::SQLite(), here("data", "companies.db"))
+  companies <- tbl(con, "companies")
+  dbDisconnect(con)
+}
+run_app()
+```
+
+```{r}
+con <- dbConnect(RSQLite::SQLite(), here("data", "companies.db"))
+  companies <- tbl(con, "companies")
+  dbDisconnect(con)
+```
+
+```{r}
+companies
+```
+
