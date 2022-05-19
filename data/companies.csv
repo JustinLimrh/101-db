@@ -1,21 +1,21 @@
-Company Name,Geography,Stage,Sector,Team,Revenue Growth
-Sensor Tech,ASIA,Pre-Seed,Tech,Kristian Allen,7
-Techgenix,ASIA,Seed,Tech,Thomas Cooper,7
-Rocket Tech,ASIA,Series A,Tech,Vincent Ferguson,36
-Operator Tech,USA,Series B,Tech,Lucas Fowler,70
-Splendour,USA,Seed,Fashion,Melanie Morris,36
-Techlux,USA,Pre-Seed,Tech,Lucas Carroll,5
-Druid,EU,Seed,Healthcare,Alisa Nelson,48
-Techtastic,EU,> Series C,Tech,Spike Carter,70
-Dreamworld,EU,Series C,Healthcare,James Turner,14
-Technest,EU,IPO stage,Tech,Richard Ross,21
-Illuminate,USA,IPO stage,Healthcare,Alexia Andrews,70
-Pak,USA,IPO stage,Corporate,Adam Carter,38
-Arclight tech,USA,Seed,Tech,Carl Hill,36
-Giga Tech,ASIA,Pre-Seed,Tech,Henry Roberts,21
-Titan ,ASIA,Series A,Corporate,Myra Walker,21
-Endeavor,ASIA,Series A,Corporate,Florrie Harris,31
-Spire,USA,Series B,Corporate,Edgar Rogers,36
-Impulse,USA,Series B,Fashion,Henry Williams,47
-Disrupter Partners,EU,Series C,Corporate,Naomi Hawkins,78
-Virtuoso,EU,Seed,Entertainment,Max Smith,24
+Company Name,cid,Geography,Stage,Sector,Team,Revenue Growth
+Sensor Tech,1,ASIA,Pre-Seed,Tech,Kristian Allen,7
+Techgenix,2,ASIA,Seed,Tech,Thomas Cooper,7
+Rocket Tech,3,ASIA,Series A,Tech,Vincent Ferguson,36
+Operator Tech,4,USA,Series B,Tech,Lucas Fowler,70
+Splendour,5,USA,Seed,Fashion,Melanie Morris,36
+Techlux,6,USA,Pre-Seed,Tech,Lucas Carroll,5
+Druid,7,EU,Seed,Healthcare,Alisa Nelson,48
+Techtastic,8,EU,> Series C,Tech,Spike Carter,70
+Dreamworld,9,EU,Series C,Healthcare,James Turner,14
+Technest,10,EU,IPO stage,Tech,Richard Ross,21
+Illuminate,11,USA,IPO stage,Healthcare,Alexia Andrews,70
+Pak,12,USA,IPO stage,Corporate,Adam Carter,38
+Arclight tech,13,USA,Seed,Tech,Carl Hill,36
+Giga Tech,14,ASIA,Pre-Seed,Tech,Henry Roberts,21
+Titan ,15,ASIA,Series A,Corporate,Myra Walker,21
+Endeavor,16,ASIA,Series A,Corporate,Florrie Harris,31
+Spire,17,USA,Series B,Corporate,Edgar Rogers,36
+Impulse,18,USA,Series B,Fashion,Henry Williams,47
+Disrupter Partners,19,EU,Series C,Corporate,Naomi Hawkins,78
+Virtuoso,20,EU,Seed,Entertainment,Max Smith,24

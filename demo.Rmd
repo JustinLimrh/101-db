@@ -27,12 +27,16 @@ run_app()
 ```
 
 ```{r}
-con <- dbConnect(RSQLite::SQLite(), here("data", "companies.db"))
-  companies <- tbl(con, "companies")
-  dbDisconnect(con)
+con <- dbConnect(RSQLite::SQLite(), "data/companies.db")
+companies <- tbl(con, "companies")
+investors <- tbl(con, "investors")
+companies = companies %>% collect()
+investors = investors %>% collect()
+dbDisconnect(con)
 ```
 
-```{r}
-companies
+```{r }
+
+
 ```
 
