@@ -12,31 +12,176 @@ library(formattable)
 library(tidyverse)
 library(RSQLite)
 library(shiny)
-library(here)
-library(glue)
-library(DT)
+library(kableExtra)
 ```
 
 ```{r}
-run_app = function(){
-  con <- dbConnect(RSQLite::SQLite(), here("data", "companies.db"))
+con <- dbConnect(SQLite(), "data/companies.db")
   companies <- tbl(con, "companies")
+  investors <- tbl(con, "investors")
+  companies = companies %>% collect()
+  investors = investors %>% collect()
+  dbDisconnect(con)
+```
+
+```{r}
+ret = investors %>% 
+  add_row(Geography = "No Preference") %>%
+  select(Geography)
+ret = rbind(ret[length(ret)],ret[1:length(ret)])
+ret
+```
+
+```{r}
+
+insert_query = function(con, name, geog_pref, stage_pref, sector_pref){
+  insert_qry = paste0('INSERT INTO investors(Name, Geography, Stage, Sector) VALUES ("'  ,  name,  '", "'  ,geog_pref, '", "'  ,stage_pref, '", "',  sector_pref, '");' )
+  dbExecute(con, insert_qry)
   dbDisconnect(con)
 }
-run_app()
-```
 
-```{r}
-con <- dbConnect(RSQLite::SQLite(), "data/companies.db")
-companies <- tbl(con, "companies")
-investors <- tbl(con, "investors")
-companies = companies %>% collect()
-investors = investors %>% collect()
-dbDisconnect(con)
-```
+shiny_VC_matching = function(){
+  con <- dbConnect(SQLite(), "data/companies.db")
+  companies <- tbl(con, "companies")
+  investors <- tbl(con, "investors")
+  companies = companies %>% collect()
+  investors = investors %>% collect()
+  dbDisconnect(con)
+  
+  geog_choices = companies %>% 
+    add_row(Geography = "No Preference") %>% 
+    select(Geography)
+  
+  sector_choices = companies %>% 
+    add_row(Sector = "No Preference") %>% 
+    select(Sector)
+  
+  stage_choices = companies %>% 
+    add_row(Stage = "No Preference") %>% 
+    select(Stage)
+  
+  shinyApp(
+    ui = fluidPage(
+      titlePanel("Database"),
+      sidebarLayout(
+        sidebarPanel = sidebarPanel(
+        selectInput("user", h4("User profile"), choices = investors$Name),
+        actionButton("setup_modal", "Create new user profile"),
+        selectInput("geog", h4("Geography"), choices = geog_choices),
+        selectInput("sector", h4("Sector"), choices = sector_choices),
+        selectInput("stage", h4("Stage"), choices = stage_choices),
+        actionButton("run", "Generate list of companies"),
+        checkboxInput("checkbox", 
+                      label = "Generate detailed table", 
+                      value = TRUE),
+        checkboxInput("filter_geog", 
+                      label = "Filter by Geography", 
+                      value = TRUE),
+        checkboxInput("filter_sector", 
+                      label = "Filter by Sector", 
+                      value = TRUE),
+        checkboxInput("filter_stage", 
+                      label = "Filter by Financial Stage", 
+                      value = TRUE),
+      ),
+      mainPanel = mainPanel(
+        h4("List of companies:"),
+        dataTableOutput("table")
+      )
+      )
+    ),
+    
+    
+    server = function(input, output, session) {
+      
+      observeEvent(input$setup_modal, {
+            showModal(modalDialog(
+              textInput("name", h4("User Name")),
+              selectInput("geog_pref", h4("Geography Preference"), choices = companies %>% add_row(Geography = "No Preference") %>% select(Geography), selected = "No Preference"), 
+              selectInput("sector_pref", h4("Sector Preference"), choices = companies %>% add_row(Sector = "No Preference") %>% select(Sector), selected = "No Preference"),
+              selectInput("stage_pref", h4("Stage Preference"), choices = companies %>% add_row(Stage = "No Preference") %>% select(Stage), selected = "No Preference"),
+              actionButton("create", "Create profile"),
+              textOutput("errorcheck"),
+              easyClose = TRUE,
+              footer = tagList(
+              actionButton("close", "Close"))
+              )
+              )
+          })
+            
+      observeEvent(input$create, {
+          con <- dbConnect(SQLite(), "data/companies.db")
+          safeGet = safely(insert_query)
+          safeTester = safeGet(
+            con,
+            input$name,
+            input$geog_pref,
+            input$stage_pref,
+            input$sector_pref
+          ) 
+          results_error = safeTester$error
+          if (is.null(results_error) == FALSE & input$name %in% investors$Name) {
+              output$errorcheck = renderUI(stop("Please choose another name"))
+          }
+          else if (is.null(results_error) == FALSE) {
+              output$errorcheck = renderUI(stop(results_error$message))
+          }
+          if (is.null(results_error)){
+            con <- dbConnect(SQLite(), "data/companies.db")
+            investors <- tbl(con, "investors")
+            investors = investors %>% collect()
+            updateSelectInput(session, "user", choices = investors$Name)
+            dbDisconnect(con)
+            removeModal()
+          }
+        })
+      observeEvent(input$close, {
+            removeModal()
+        })
+      
+      observeEvent(input$user, {
+        if (input$user != ""){
+        updateSelectInput(session, "geog", choices = geog_choices, 
+                          selected = as.character(investors %>% filter(Name == 
+                          input$user) %>% select(Geography)))
+        updateSelectInput(session, "sector", choices = sector_choices,
+                          selected = as.character(investors %>% filter(Name ==
+                          input$user) %>% select(Sector)))
+        updateSelectInput(session, "stage", choices = stage_choices, 
+                          selected = as.character(investors %>% filter(Name == 
+                          input$user) %>% select(Stage)))
+        }
+        })
+      
+      output$table = renderDataTable({
+        
+        if (!input$checkbox) {
+          companies = companies %>% 
+            select(`Company Name`, Geography, Stage, Sector,`Valuation ($B)`, `Total Raised`)
+        }
+        
+        if (input$filter_geog & input$geog != "No Preference" ){
+          companies = companies %>%
+          filter(Geography == input$geog)
+        }
+        if (input$filter_sector & input$sector != "No Preference" ){
+          companies = companies %>%
+          filter(Sector == input$sector)
+        }
+        if (input$filter_stage & input$stage != "No Preference" ){
+          companies = companies %>%
+          filter(Stage == input$stage)
+        }
+        else{
+          companies
+        }
+        
+      }) %>% 
+        bindEvent(input$run)
+      
+    })
+}
 
-```{r }
-
-
+shiny_VC_matching()
 ```
 
