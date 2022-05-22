@@ -1,0 +1,13 @@
+name: 101-db
+title: 101-db
+username:
+account: justinlimrh
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 6349341
+bundleId: 5931729
+url: https://justinlimrh.shinyapps.io/101-db/
+when: 1653207384.42337
+lastSyncTime: 1653207384.42338
+asMultiple: FALSE
+asStatic: FALSE

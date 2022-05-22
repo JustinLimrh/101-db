@@ -1,13 +1,15 @@
 ---
-title: "101 database task"
+title: "101 Database Automation Task"
 author: "Justin Lim"
 output: html_document
 runtime: shiny
 ---
 
-## Setup
+## Database Automation Task
 
-```{r setup, message=FALSE}
+
+
+```{r setup, message=FALSE, warning = FALSE, echo = FALSE}
 library(formattable)
 library(tidyverse)
 library(RSQLite)
@@ -15,30 +17,15 @@ library(shiny)
 library(kableExtra)
 ```
 
-```{r}
-con <- dbConnect(SQLite(), "data/companies.db")
-  companies <- tbl(con, "companies")
-  investors <- tbl(con, "investors")
-  companies = companies %>% collect()
-  investors = investors %>% collect()
-  dbDisconnect(con)
-```
-
-```{r}
-ret = investors %>% 
-  add_row(Geography = "No Preference") %>%
-  select(Geography)
-ret = rbind(ret[length(ret)],ret[1:length(ret)])
-ret
-```
-
-```{r}
-
+```{r, warning = FALSE, echo = FALSE}
 insert_query = function(con, name, geog_pref, stage_pref, sector_pref){
-  insert_qry = paste0('INSERT INTO investors(Name, Geography, Stage, Sector) VALUES ("'  ,  name,  '", "'  ,geog_pref, '", "'  ,stage_pref, '", "',  sector_pref, '");' )
-  dbExecute(con, insert_qry)
-  dbDisconnect(con)
-}
+        insert_qry = paste0('INSERT INTO investors(Name, Geography, Stage, Sector) VALUES ("'  ,  name,  '", "'  ,geog_pref, '", "'  ,stage_pref, '", "',  sector_pref, '");' )
+        dbExecute(con, insert_qry)
+        investors <- tbl(con, "investors")
+        investors = investors %>% collect()
+        dbDisconnect(con)
+        return(investors)
+      }
 
 shiny_VC_matching = function(){
   con <- dbConnect(SQLite(), "data/companies.db")
@@ -46,6 +33,7 @@ shiny_VC_matching = function(){
   investors <- tbl(con, "investors")
   companies = companies %>% collect()
   investors = investors %>% collect()
+  reactive_table <- reactiveValues(data = investors)
   dbDisconnect(con)
   
   geog_choices = companies %>% 
@@ -65,15 +53,16 @@ shiny_VC_matching = function(){
       titlePanel("Database"),
       sidebarLayout(
         sidebarPanel = sidebarPanel(
+        width = 3,
         selectInput("user", h4("User profile"), choices = investors$Name),
-        actionButton("setup_modal", "Create new user profile"),
+        actionButton("setup_modal", "Create new profile"),
         selectInput("geog", h4("Geography"), choices = geog_choices),
         selectInput("sector", h4("Sector"), choices = sector_choices),
         selectInput("stage", h4("Stage"), choices = stage_choices),
-        actionButton("run", "Generate list of companies"),
+        actionButton("run", "Generate table"),
         checkboxInput("checkbox", 
                       label = "Generate detailed table", 
-                      value = TRUE),
+                      value = FALSE),
         checkboxInput("filter_geog", 
                       label = "Filter by Geography", 
                       value = TRUE),
@@ -82,7 +71,7 @@ shiny_VC_matching = function(){
                       value = TRUE),
         checkboxInput("filter_stage", 
                       label = "Filter by Financial Stage", 
-                      value = TRUE),
+                      value = TRUE)
       ),
       mainPanel = mainPanel(
         h4("List of companies:"),
@@ -91,15 +80,14 @@ shiny_VC_matching = function(){
       )
     ),
     
-    
     server = function(input, output, session) {
       
       observeEvent(input$setup_modal, {
             showModal(modalDialog(
               textInput("name", h4("User Name")),
-              selectInput("geog_pref", h4("Geography Preference"), choices = companies %>% add_row(Geography = "No Preference") %>% select(Geography), selected = "No Preference"), 
-              selectInput("sector_pref", h4("Sector Preference"), choices = companies %>% add_row(Sector = "No Preference") %>% select(Sector), selected = "No Preference"),
-              selectInput("stage_pref", h4("Stage Preference"), choices = companies %>% add_row(Stage = "No Preference") %>% select(Stage), selected = "No Preference"),
+              selectInput("geog_pref", h4("Geography preference"), choices = (companies %>% add_row(Geography = "No Preference"))$Geography, selected = "No Preference"), 
+              selectInput("sector_pref", h4("Sector preference"), choices = (companies %>% add_row(Sector = "No Preference"))$Sector, selected = "No Preference"),
+              selectInput("stage_pref", h4("Stage preference"), choices = (companies %>% add_row(Stage = "No Preference"))$Stage, selected = "No Preference"),
               actionButton("create", "Create profile"),
               textOutput("errorcheck"),
               easyClose = TRUE,
@@ -108,9 +96,9 @@ shiny_VC_matching = function(){
               )
               )
           })
-            
+      
       observeEvent(input$create, {
-          con <- dbConnect(SQLite(), "data/companies.db")
+          con <- dbConnect(SQLite(), "data/companies.db")        
           safeGet = safely(insert_query)
           safeTester = safeGet(
             con,
@@ -120,18 +108,16 @@ shiny_VC_matching = function(){
             input$sector_pref
           ) 
           results_error = safeTester$error
-          if (is.null(results_error) == FALSE & input$name %in% investors$Name) {
+          reactive_table$data = safeTester$result
+          if (is.null(results_error) == FALSE & input$name %in% reactive_table$data$Name) {
               output$errorcheck = renderUI(stop("Please choose another name"))
           }
           else if (is.null(results_error) == FALSE) {
               output$errorcheck = renderUI(stop(results_error$message))
           }
           if (is.null(results_error)){
-            con <- dbConnect(SQLite(), "data/companies.db")
-            investors <- tbl(con, "investors")
-            investors = investors %>% collect()
-            updateSelectInput(session, "user", choices = investors$Name)
-            dbDisconnect(con)
+            output$errorcheck = renderText("No error found")
+            updateSelectInput(session, "user", choices = reactive_table$data$Name)
             removeModal()
           }
         })
@@ -139,17 +125,18 @@ shiny_VC_matching = function(){
             removeModal()
         })
       
+      
       observeEvent(input$user, {
         if (input$user != ""){
-        updateSelectInput(session, "geog", choices = geog_choices, 
-                          selected = as.character(investors %>% filter(Name == 
-                          input$user) %>% select(Geography)))
-        updateSelectInput(session, "sector", choices = sector_choices,
-                          selected = as.character(investors %>% filter(Name ==
-                          input$user) %>% select(Sector)))
-        updateSelectInput(session, "stage", choices = stage_choices, 
-                          selected = as.character(investors %>% filter(Name == 
-                          input$user) %>% select(Stage)))
+          selected_name = toString(input$user)
+          updateSelectInput(session, "geog", choices = geog_choices, 
+                            selected = as.character(reactive_table$data %>% filter(Name==selected_name) %>% select(Geography)))
+          updateSelectInput(session, "sector", choices = sector_choices,
+                            selected = as.character(reactive_table$data %>% filter(Name == selected_name) %>% select(Sector)))
+          updateSelectInput(session, "stage", choices = stage_choices, 
+                            selected = as.character(reactive_table$data %>% filter(Name == selected_name) %>% select(Stage)))
+          output$table2 = renderDataTable({ reactive_table$data
+            })
         }
         })
       
@@ -178,10 +165,13 @@ shiny_VC_matching = function(){
         
       }) %>% 
         bindEvent(input$run)
-      
     })
 }
 
 shiny_VC_matching()
 ```
+
+References:
+https://shiny.rstudio.com/
+https://data.library.virginia.edu/creating-a-sqlite-database-for-use-with-r/
 
