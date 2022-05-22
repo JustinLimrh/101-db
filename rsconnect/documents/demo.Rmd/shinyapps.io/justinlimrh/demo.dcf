@@ -1,0 +1,13 @@
+name: demo
+title: demo
+username:
+account: justinlimrh
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 6349443
+bundleId: 5931862
+url: https://justinlimrh.shinyapps.io/demo/
+when: 1653212555.78918
+lastSyncTime: 1653212555.78919
+asMultiple: FALSE
+asStatic: FALSE

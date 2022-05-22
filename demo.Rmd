@@ -141,7 +141,7 @@ shiny_VC_matching = function(){
         
         if (!input$checkbox) {
           companies = companies %>% 
-            select(`Company Name`, Geography, Stage, Sector,`Valuation ($B)`, `Total Raised`)
+            select(`Company Name`, Geography, Stage, Sector,`Valuation ($B)`, `Total Raised ($B)`)
         }
         
         if (input$filter_geog & input$geog != "No Preference" ){
