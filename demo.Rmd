@@ -7,14 +7,11 @@ runtime: shiny
 
 ## Database Automation Task
 
-
-
 ```{r setup, message=FALSE, warning = FALSE, echo = FALSE}
 library(formattable)
 library(tidyverse)
 library(RSQLite)
 library(shiny)
-library(kableExtra)
 ```
 
 ```{r, warning = FALSE, echo = FALSE}
@@ -165,13 +162,28 @@ shiny_VC_matching = function(){
         
       }) %>% 
         bindEvent(input$run)
-    })
+    },
+    options = list(height = 800)
+    )
 }
+```
 
+```{r, warning = FALSE, message=FALSE}
 shiny_VC_matching()
 ```
 
-References:
-https://shiny.rstudio.com/
-https://data.library.virginia.edu/creating-a-sqlite-database-for-use-with-r/
+### Description:
+
+This shiny app matches startups, stored in an sqlite database, to a users' preferences. The app also allows users to create new profiles and specify their preferences, which are also stored in the database. 
+
+A user can create a user profile, along with their preferences, and use these preferences to find matching startups in the database. The user can modify these search queries using the dropdown tables in the app and generate more detailed statistics as well. Within the table, the startups can be sorted based on each column. 
+
+### Github link:
+https://github.com/JustinLimrh/101-db
+
+### References:
+https://shiny.rstudio.com/  
+https://stackoverflow.com/questions/68707587/in-r-shiny-how-to-render-a-reactive-data-table  
+https://data.library.virginia.edu/creating-a-sqlite-database-for-use-with-r/  
+
 
